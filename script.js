@@ -1,3 +1,6 @@
+// filepath: /d:/coding/DSA-Sprint-HTML/script.js
+const previousEntries = [];
+
 document.getElementById("numberForm").addEventListener("submit", async (event) => {
     event.preventDefault();
 
@@ -18,21 +21,87 @@ document.getElementById("numberForm").addEventListener("submit", async (event) =
             },
             body: JSON.stringify(numbers), // Send the array directly
         });
-    
+
         console.log("Response status:", response.status);
-    
+
         if (!response.ok) {
             const errorText = await response.text();
             console.log("Response body:", errorText);
             throw new Error("Failed to create binary tree");
         }
-    
+
         const treeData = await response.json();
         console.log("Response body:", treeData);
+
+        // Fetch and display previous entries
+        await fetchPreviousEntries();
+
         openVisualizationWindow(treeData);
     } catch (error) {
         console.error("Error:", error);
         alert("An error occurred. Check the console for details.");
+    }
+});
+
+document.getElementById("togglePreviousEntries").addEventListener("click", async () => {
+    const previousEntriesDiv = document.getElementById("previousEntries");
+    if (previousEntriesDiv.style.display === "none" || previousEntriesDiv.style.display === "") {
+        previousEntriesDiv.style.display = "block";
+        document.getElementById("togglePreviousEntries").textContent = "Hide Previous Entries";
+        await fetchPreviousEntries(); // Fetch and display entries when showing the div
+    } else {
+        previousEntriesDiv.style.display = "none";
+        document.getElementById("togglePreviousEntries").textContent = "Show Previous Entries";
+    }
+});
+
+async function fetchPreviousEntries() {
+    try {
+        const response = await fetch('http://localhost:8080/api/entries');
+        const data = await response.json();
+
+        if (!Array.isArray(data)) {
+            throw new Error('Expected an array of trees');
+        }
+
+        // Open a new window
+        const newWindow = window.open('entries.html', '_blank');
+
+        // Wait for the new window to load
+        newWindow.onload = () => {
+            const previousEntriesDiv = newWindow.document.getElementById("previousEntries");
+            previousEntriesDiv.innerHTML = ''; // Clear previous entries
+
+            data.forEach(entry => {
+                if (entry.inputNumbers) {
+                    const numbers = entry.inputNumbers.split(',').map(Number);
+                    console.log('Numbers:', numbers);
+
+                    // Create a new div for each entry
+                    const entryDiv = newWindow.document.createElement('div');
+                    entryDiv.className = 'entry';
+                    entryDiv.textContent = `Numbers: ${numbers.join(', ')}`;
+                    previousEntriesDiv.appendChild(entryDiv);
+                } else {
+                    console.warn('Entry does not have inputNumbers:', entry);
+                }
+            });
+        };
+    } catch (error) {
+        console.error('Error fetching previous trees:', error);
+    }
+}
+
+document.getElementById("togglePreviousEntries").addEventListener("click", fetchPreviousEntries);
+document.getElementById("togglePreviousEntries").addEventListener("click", () => {
+    const previousEntriesDiv = document.getElementById("previousEntries");
+    if (previousEntriesDiv.style.display === "none") {
+        previousEntriesDiv.style.display = "block";
+        document.getElementById("togglePreviousEntries").textContent = "Hide Previous Entries";
+        fetchPreviousEntries(); // Fetch and display entries when showing the div
+    } else {
+        previousEntriesDiv.style.display = "none";
+        document.getElementById("togglePreviousEntries").textContent = "Show Previous Entries";
     }
 });
 
@@ -63,58 +132,61 @@ function openVisualizationWindow(treeData) {
     `);
 }
 
+function showPreviousEntries() {
+    const container = document.getElementById("previousEntries");
+    container.innerHTML = ''; // Clear previous content
 
-function displayTreeAsTable(treeData) {
-    const table = document.createElement("table");
-    table.style.borderCollapse = "collapse";
-    table.style.margin = "20px auto";
-    table.style.width = "80%";
+    fetch('http://localhost:8080/api/entries')
+        .then(response => response.json())
+        .then(data => {
+            if (!Array.isArray(data)) {
+                throw new Error('Expected an array of entries');
+            }
 
-    // Add table headers
-    const headerRow = table.insertRow();
-    ["Node Value", "Left Child", "Right Child"].forEach(header => {
-        const cell = document.createElement("th");
-        cell.textContent = header;
-        cell.style.border = "1px solid #ccc";
-        cell.style.padding = "10px";
-        headerRow.appendChild(cell);
-    });
-
-    // Recursively populate table rows
-    function addRows(node) {
-        if (!node) return;
-
-        const row = table.insertRow();
-        const valueCell = row.insertCell();
-        const leftCell = row.insertCell();
-        const rightCell = row.insertCell();
-
-        valueCell.textContent = node.value || "N/A";
-        valueCell.style.border = "1px solid #ccc";
-        valueCell.style.padding = "10px";
-        leftCell.textContent = node.left ? node.left.value : "None";
-        leftCell.style.border = "1px solid #ccc";
-        leftCell.style.padding = "10px";
-        rightCell.textContent = node.right ? node.right.value : "None";
-        rightCell.style.border = "1px solid #ccc";
-        rightCell.style.padding = "10px";
-
-        // Add rows for children
-        addRows(node.left);
-        addRows(node.right);
-    }
-
-    addRows(treeData);
-
-    // Clear previous content and add the table
-    const container = document.getElementById("treeVisualization");
-    container.innerHTML = ""; // Clear previous content
-    container.appendChild(table);
+            data.forEach(entry => {
+                if (entry.inputNumbers) {
+                    const numbers = entry.inputNumbers.split(',').map(Number);
+                    const entryDiv = document.createElement('div');
+                    entryDiv.textContent = `Numbers: ${numbers.join(', ')}`;
+                    container.appendChild(entryDiv);
+                } else {
+                    console.warn('Entry does not have inputNumbers:', entry);
+                }
+            });
+        })
+        .catch(error => {
+            console.error('Error fetching previous entries:', error);
+        });
 }
 
-// Call this function with the tree data
-displayTreeAsTable(treeData);
+function showPreviousEntries() {
+    const container = document.getElementById("previousEntries");
+    container.innerHTML = ''; // Clear previous content
 
+    fetch('http://localhost:8080/api/entries')
+        .then(response => response.json())
+        .then(data => {
+            if (!Array.isArray(data)) {
+                throw new Error('Expected an array of entries');
+            }
+
+            data.forEach(entry => {
+                if (entry.inputNumbers) {
+                    const numbers = entry.inputNumbers.split(',').map(Number);
+                    const entryDiv = document.createElement('div');
+                    entryDiv.textContent = `Numbers: ${numbers.join(', ')}`;
+                    container.appendChild(entryDiv);
+                } else {
+                    console.warn('Entry does not have inputNumbers:', entry);
+                }
+            });
+        })
+        .catch(error => {
+            console.error('Error fetching previous entries:', error);
+        });
+}
+
+// Function to display tree as a list
 function displayTreeAsList(treeData) {
     function createList(node) {
         if (!node) return null;
@@ -155,61 +227,5 @@ function displayTreeAsList(treeData) {
     }
 }
 
-// Call this function with the tree data
-displayTreeAsList(treeData);
-
-
-function visualizeTree(treeData) {
-    const width = 800;
-    const height = 600;
-
-    const svg = d3.select("#treeVisualization").html("") // Clear existing content
-        .append("svg")
-        .attr("width", width)
-        .attr("height", height)
-        .attr("viewBox", `-${width / 2} -${height / 2} ${width} ${height}`)
-        .attr("preserveAspectRatio", "xMidYMid meet");
-
-    const treeLayout = d3.tree().size([width - 200, height - 200]);
-
-    // Convert the treeData into a hierarchy
-    const root = d3.hierarchy(treeData);
-
-    // Apply the tree layout
-    treeLayout(root);
-
-    // Debugging: Log root hierarchy
-    console.log("Hierarchy root:", root);
-
-    // Draw links
-    svg.selectAll(".link")
-        .data(root.links())
-        .enter()
-        .append("path")
-        .classed("link", true)
-        .attr("d", d3.linkHorizontal()
-            .x(d => d.y)
-            .y(d => d.x))
-        .attr("stroke", "#555")
-        .attr("fill", "none");
-
-    // Draw nodes
-    const nodes = svg.selectAll(".node")
-        .data(root.descendants())
-        .enter()
-        .append("g")
-        .classed("node", true)
-        .attr("transform", d => `translate(${d.y}, ${d.x})`);
-
-    nodes.append("circle")
-        .attr("r", 10)
-        .attr("fill", "#007BFF")
-        .attr("stroke", "#fff")
-        .attr("stroke-width", 3);
-
-    nodes.append("text")
-        .attr("dy", 3)
-        .attr("x", d => d.children ? -12 : 12)
-        .style("text-anchor", d => d.children ? "end" : "start")
-        .text(d => d.data.value);
-}
+// Fetch previous entries on page load
+fetchPreviousEntries();
