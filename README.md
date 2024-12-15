@@ -75,4 +75,4 @@ This project is licensed under the MIT License. See the LICENSE file for details
 
 Your Name - Steve Sharpe
 
-Project Link: [[https://github.com/yourusername/binary-tree-visualizer](https://github.com/yourusername/binary-tree-visualizer)](https://github.com/steve-sharpe/DSA-Sprint-HTML)
+Project Link: [(https://github.com/yourusername/binary-tree-visualizer)](https://github.com/steve-sharpe/DSA-Sprint-HTML)
